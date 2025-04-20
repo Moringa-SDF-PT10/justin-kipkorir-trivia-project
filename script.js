@@ -8,11 +8,13 @@ const scoreEl = document.getElementById('score');
 const scoreContainer = document.getElementById('score-container');
 const summaryContainer = document.getElementById('summary-container');
 const summaryList = document.getElementById('summary-list');
+const difficultySelect = document.getElementById('difficulty');
 
 let questions = [];
 let currentQuestionIndex = 0;
 let score = 0;
 let incorrectAnswers = [];
+let selectedDifficulty = difficultySelect.value;
 
 startBtn.addEventListener('click', startGame);
 nextBtn.addEventListener('click', () => {
@@ -20,6 +22,17 @@ nextBtn.addEventListener('click', () => {
   showQuestion();
 });
 restartBtn.addEventListener('click', startGame);
+
+difficultySelect.addEventListener('change', (e) => {
+  selectedDifficulty = e.target.value;
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === 'ArrowRight') && !nextBtn.classList.contains('hide')) {
+    currentQuestionIndex++;
+    showQuestion();
+  }
+});
 
 function startGame() {
   score = 0;
@@ -38,11 +51,16 @@ function startGame() {
 }
 
 function fetchQuestions() {
-  fetch('https://opentdb.com/api.php?amount=5&type=multiple')
+  questionEl.textContent = 'Loading questions...';
+  fetch(`https://opentdb.com/api.php?amount=5&type=multiple&difficulty=${selectedDifficulty}`)
     .then(res => res.json())
     .then(data => {
       questions = data.results;
       showQuestion();
+    })
+    .catch(err => {
+      questionEl.textContent = 'Failed to load questions. Please try again later.';
+      console.error('Error fetching questions:', err);
     });
 }
 
@@ -80,7 +98,6 @@ function selectAnswer(selected, correct, questionObj) {
     score++;
     scoreEl.textContent = score;
   } else {
-    // Save incorrect answers for review at the end
     incorrectAnswers.push({
       question: decodeHTML(questionObj.question),
       yourAnswer: decodeHTML(selected),
